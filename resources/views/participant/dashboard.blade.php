@@ -38,9 +38,9 @@
                     <form action="{{ route('participant.dashboard') }}" method="GET"
                         class="flex items-center space-x-2 w-full sm:w-auto">
                         <x-ui.input name="search" type="text" placeholder="Search assessments..."
-                            value="{{ $search }}" class="!py-1 !text-xs max-w-[200px]" />
+                            value="{{ $search }}" class="py-1! text-xs! max-w-50" />
                         <x-ui.button type="submit" variant="secondary"
-                            class="!px-2 !py-1 !text-xs">Search</x-ui.button>
+                            class="px-2! py-1! text-xs!">Search</x-ui.button>
                         @if ($search)
                             <a href="{{ route('participant.dashboard') }}"
                                 class="text-xs text-gray-500 hover:text-gray-900">Clear</a>
@@ -100,7 +100,7 @@
                                         @if ($quiz->active_attempt)
                                             <a href="{{ route('participant.attempts.take', $quiz->active_attempt) }}">
                                                 <x-ui.button variant="primary"
-                                                    class="!px-3 !py-1 !text-xs !bg-amber-600 hover:!bg-amber-700 !border-amber-600 text-white animate-pulse">
+                                                    class="px-3! py-1! text-xs! bg-amber-600! hover:bg-amber-700! border-amber-600! text-white animate-pulse">
                                                     Resume Attempt
                                                 </x-ui.button>
                                             </a>
@@ -112,7 +112,7 @@
                                                 method="POST">
                                                 @csrf
                                                 <x-ui.button type="submit" variant="primary"
-                                                    class="!px-3 !py-1 !text-xs">
+                                                    class="px-3! py-1! text-xs!">
                                                     {{ $quiz->attempt_limit_type === 'repeatable' && $quiz->completed_attempts_count > 0 ? 'Retake Assessment' : 'Start Assessment' }}
                                                 </x-ui.button>
                                             </form>
@@ -143,7 +143,7 @@
                                 <div class="flex justify-between items-start">
                                     <div class="space-y-0.5">
                                         <span
-                                            class="text-xs font-semibold text-gray-950 block truncate max-w-[180px]">{{ $attempt->quiz->title }}</span>
+                                            class="text-xs font-semibold text-gray-950 block truncate max-w-45">{{ $attempt->quiz->title }}</span>
                                         <span class="text-[10px] text-gray-400 block">
                                             {{ $attempt->completed_at ? 'Last finished: ' . $attempt->completed_at->format('M d, Y - H:i') : 'Started: ' . $attempt->created_at->format('M d, Y - H:i') }}
                                         </span>
@@ -182,13 +182,13 @@
                                     </span>
                                     @if ($attempt->completed_at)
                                         <a href="{{ route('participant.attempts.show', $attempt) }}">
-                                            <x-ui.button variant="secondary" class="!px-2 !py-0.5 !text-[11px]">View
+                                            <x-ui.button variant="secondary" class="px-2! py-0.5! text-[11px]!">View
                                                 Results</x-ui.button>
                                         </a>
                                     @else
                                         <a href="{{ route('participant.attempts.take', $attempt) }}">
                                             <x-ui.button variant="primary"
-                                                class="!px-2 !py-0.5 !text-[11px]">Resume</x-ui.button>
+                                                class="px-2! py-0.5! text-[11px]!">Resume</x-ui.button>
                                         </a>
                                     @endif
                                 </div>
