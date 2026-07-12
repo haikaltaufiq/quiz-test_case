@@ -7,6 +7,7 @@ use App\Models\Attempt;
 use App\Models\Quiz;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class QuizController extends Controller
 {
@@ -16,14 +17,14 @@ class QuizController extends Controller
         $userAttempts = Attempt::where('user_id', auth()->id())->whereNull('completed_at')->get();
         foreach ($userAttempts as $att) {
             $att->checkAndClose();
-            
+
             // If attempt is still not completed and it is NOT a repeatable quiz,
             // visiting the dashboard means they left the exam. We force-submit/close it now.
             if (!$att->completed_at && $att->quiz->attempt_limit_type !== 'repeatable') {
                 $questions = $att->quiz->questions;
                 $correctCount = 0;
                 $totalQuestions = $questions->count();
-                
+
                 foreach ($questions as $question) {
                     $answer = $att->answers()->where('question_id', $question->id)->first();
                     if ($answer && $question->type === 'multiple_choice') {
@@ -32,11 +33,11 @@ class QuizController extends Controller
                         }
                     }
                 }
-                
+
                 $att->score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 100;
                 $att->completed_at = now();
                 $att->save();
-                
+
                 ActivityLog::log('attempt_closed_on_exit', "Attempt ID: {$att->id} was automatically finalized because the user left the exam page.");
             }
         }
@@ -44,11 +45,11 @@ class QuizController extends Controller
         // 2. Search & Filter Published Quizzes only
         $search = $request->input('search');
         $quizzesQuery = Quiz::where('is_published', true)->withCount('questions');
-        
+
         if ($search) {
-            $quizzesQuery->where(function($q) use ($search) {
+            $quizzesQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
         $quizzes = $quizzesQuery->get();
@@ -82,7 +83,7 @@ class QuizController extends Controller
                 $quiz->limit_message = "Limit reached ({$quiz->max_attempts}/{$quiz->max_attempts})";
             }
         }
-        
+
         // 4. Fetch User Attempt History
         $attempts = Attempt::with(['quiz'])
             ->where('user_id', auth()->id())
@@ -94,9 +95,11 @@ class QuizController extends Controller
         $stats = [
             'completed' => $completedAttempts->count(),
             'average_score' => round($completedAttempts->avg('score') ?? 0),
-            'pending_review' => $completedAttempts->filter(function($attempt) {
+            'pending_review' => $completedAttempts->filter(function ($attempt) {
                 return $attempt->answers()
-                    ->whereHas('question', function($q) { $q->where('type', 'essay'); })
+                    ->whereHas('question', function ($q) {
+                        $q->where('type', 'essay');
+                    })
                     ->whereNull('is_correct')
                     ->exists();
             })->count(),
@@ -107,12 +110,10 @@ class QuizController extends Controller
 
     public function start(Quiz $quiz)
     {
-        // Ensure quiz is published
         if (!$quiz->is_published) {
             return back()->with('error', 'This quiz is not available.');
         }
 
-        // Prevent starting a quiz if no questions exist
         if ($quiz->questions()->count() === 0) {
             return back()->with('error', 'This quiz has no questions yet.');
         }
@@ -126,17 +127,17 @@ class QuizController extends Controller
         if ($activeAttempt) {
             $activeAttempt->checkAndClose();
             if (is_null($activeAttempt->completed_at)) {
-                // Redirect to resume
                 return redirect()->route('participant.attempts.take', $activeAttempt)
                     ->with('info', 'Resuming your active attempt.');
             }
         }
 
-        // 2. Check attempt limits for starting a new attempt
-        $completedCount = Attempt::where('user_id', auth()->id())
+        // 2. Check attempt limits for non-repeatable quizzes
+        $completedAttemptQuery = Attempt::where('user_id', auth()->id())
             ->where('quiz_id', $quiz->id)
-            ->whereNotNull('completed_at')
-            ->count();
+            ->whereNotNull('completed_at');
+
+        $completedCount = $completedAttemptQuery->count();
 
         if ($quiz->attempt_limit_type === 'once' && $completedCount >= 1) {
             return back()->with('error', 'You have already completed this quiz. Only 1 attempt is allowed.');
@@ -146,7 +147,32 @@ class QuizController extends Controller
             return back()->with('error', "You have reached the maximum attempt limit of {$quiz->max_attempts} for this quiz.");
         }
 
-        // Create attempt
+        // 3. Logic handling for Repeatable Option: Recycle existing row instead of creating a new one
+        if ($quiz->attempt_limit_type === 'repeatable') {
+            $existingAttempt = Attempt::where('user_id', auth()->id())
+                ->where('quiz_id', $quiz->id)
+                ->first();
+
+            if ($existingAttempt) {
+                DB::transaction(function () use ($existingAttempt) {
+                    // Flush previous answers linked to this specific attempt
+                    $existingAttempt->answers()->delete();
+
+                    // Re-initialize attempt metadata
+                    $existingAttempt->update([
+                        'started_at' => now(),
+                        'score' => null,
+                        'completed_at' => null,
+                    ]);
+                });
+
+                ActivityLog::log('attempt_restarted', "Restarted repeatable attempt for Quiz '{$quiz->title}' (Attempt ID: {$existingAttempt->id}).");
+
+                return redirect()->route('participant.attempts.take', $existingAttempt);
+            }
+        }
+
+        // Fallback for new attempts (first time repeatable, once, or custom)
         $attempt = Attempt::create([
             'user_id' => auth()->id(),
             'quiz_id' => $quiz->id,
@@ -162,17 +188,14 @@ class QuizController extends Controller
 
     public function take(Attempt $attempt)
     {
-        // Ensure user owns this attempt
         if ($attempt->user_id !== auth()->id()) {
             abort(403);
         }
 
-        // Ensure attempt is not already completed
         if ($attempt->completed_at) {
             return redirect()->route('participant.attempts.show', $attempt);
         }
 
-        // Check if expired in real time
         $attempt->checkAndClose();
         if ($attempt->completed_at) {
             return redirect()->route('participant.attempts.show', $attempt)
@@ -194,7 +217,6 @@ class QuizController extends Controller
             return redirect()->route('participant.attempts.show', $attempt);
         }
 
-        // Check if expired in real time
         $attempt->checkAndClose();
         if ($attempt->completed_at) {
             return redirect()->route('participant.attempts.show', $attempt)
@@ -208,28 +230,34 @@ class QuizController extends Controller
         $correctCount = 0;
         $totalQuestions = $questions->count();
 
-        foreach ($questions as $question) {
-            $submitted = $submittedAnswers[$question->id] ?? null;
-            $isCorrect = null;
-
-            if ($question->type === 'multiple_choice') {
-                $isCorrect = (trim(strtolower($submitted)) === trim(strtolower($question->correct_answer)));
-                if ($isCorrect) {
-                    $correctCount++;
-                }
+        DB::transaction(function () use ($attempt, $questions, $submittedAnswers, &$correctCount, $totalQuestions) {
+            // Extra insurance for repeatable: Ensure current answers are clean before writing updates
+            if ($attempt->quiz->attempt_limit_type === 'repeatable') {
+                $attempt->answers()->delete();
             }
 
-            $attempt->answers()->create([
-                'question_id' => $question->id,
-                'submitted_answer' => $submitted,
-                'is_correct' => $isCorrect,
-            ]);
-        }
+            foreach ($questions as $question) {
+                $submitted = $submittedAnswers[$question->id] ?? null;
+                $isCorrect = null;
 
-        // Calculate initial score (multiple choice only or complete if no essay)
-        $attempt->score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 100;
-        $attempt->completed_at = now();
-        $attempt->save();
+                if ($question->type === 'multiple_choice') {
+                    $isCorrect = (trim(strtolower($submitted)) === trim(strtolower($question->correct_answer)));
+                    if ($isCorrect) {
+                        $correctCount++;
+                    }
+                }
+
+                $attempt->answers()->create([
+                    'question_id' => $question->id,
+                    'submitted_answer' => $submitted,
+                    'is_correct' => $isCorrect,
+                ]);
+            }
+
+            $attempt->score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 100;
+            $attempt->completed_at = now();
+            $attempt->save();
+        });
 
         ActivityLog::log('attempt_submitted', "Submitted attempt for Quiz '{$quiz->title}' (Attempt ID: {$attempt->id}). Score: {$attempt->score}%.");
 

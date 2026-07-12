@@ -17,9 +17,9 @@ class QuizController extends Controller
         $searchQuizzes = $request->input('search_quizzes');
         $quizzesQuery = Quiz::withCount('questions');
         if ($searchQuizzes) {
-            $quizzesQuery->where(function($q) use ($searchQuizzes) {
+            $quizzesQuery->where(function ($q) use ($searchQuizzes) {
                 $q->where('title', 'like', "%{$searchQuizzes}%")
-                  ->orWhere('description', 'like', "%{$searchQuizzes}%");
+                    ->orWhere('description', 'like', "%{$searchQuizzes}%");
             });
         }
         $quizzes = $quizzesQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'quizzes_page');
@@ -28,10 +28,10 @@ class QuizController extends Controller
         $searchAttempts = $request->input('search_attempts');
         $attemptsQuery = Attempt::with(['user', 'quiz']);
         if ($searchAttempts) {
-            $attemptsQuery->where(function($q) use ($searchAttempts) {
-                $q->whereHas('user', function($qu) use ($searchAttempts) {
+            $attemptsQuery->where(function ($q) use ($searchAttempts) {
+                $q->whereHas('user', function ($qu) use ($searchAttempts) {
                     $qu->where('name', 'like', "%{$searchAttempts}%");
-                })->orWhereHas('quiz', function($qq) use ($searchAttempts) {
+                })->orWhereHas('quiz', function ($qq) use ($searchAttempts) {
                     $qq->where('title', 'like', "%{$searchAttempts}%");
                 });
             });
@@ -42,9 +42,9 @@ class QuizController extends Controller
         $stats = [
             'total_quizzes' => Quiz::count(),
             'published_quizzes' => Quiz::where('is_published', true)->count(),
-            'total_attempts' => Attempt::count(),
-            'ungraded_attempts' => Attempt::whereHas('answers', function($query) {
-                $query->whereNull('is_correct')->whereHas('question', function($q) {
+            'total_attempts' => ActivityLog::whereIn('action', ['quiz_started', 'attempt_started'])->count(),
+            'ungraded_attempts' => Attempt::whereHas('answers', function ($query) {
+                $query->whereNull('is_correct')->whereHas('question', function ($q) {
                     $q->where('type', 'essay');
                 });
             })->count(),

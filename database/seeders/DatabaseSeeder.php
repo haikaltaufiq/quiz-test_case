@@ -4,9 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Quiz;
-use App\Models\Question;
 use App\Models\Attempt;
-use App\Models\Answer;
 use App\Models\ActivityLog;
 use Illuminate\Database\Seeder;
 
@@ -16,14 +14,14 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Create Core Users
         $admin = User::create([
-            'name' => 'System Administrator',
+            'name' => 'Administrator',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'role' => 'admin',
         ]);
 
         $participant = User::create([
-            'name' => 'Haikal Participant',
+            'name' => 'Participant',
             'email' => 'participant@example.com',
             'password' => bcrypt('password'),
             'role' => 'participant',
