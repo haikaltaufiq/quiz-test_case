@@ -64,9 +64,9 @@
                             <input type="hidden" name="search_attempts" value="{{ $searchAttempts }}">
                         @endif
                         <x-ui.input name="search_quizzes" type="text" placeholder="Search quizzes..."
-                            value="{{ $searchQuizzes }}" class="!py-1 !text-xs max-w-[200px]" />
+                            value="{{ $searchQuizzes }}" class="py-1! text-xs! max-w-50" />
                         <x-ui.button type="submit" variant="secondary"
-                            class="!px-2 !py-1 !text-xs">Search</x-ui.button>
+                            class="px-2! py-1! text-xs!">Search</x-ui.button>
                         @if ($searchQuizzes)
                             <a href="{{ route('admin.dashboard', ['search_attempts' => $searchAttempts]) }}"
                                 class="text-xs text-gray-500 hover:text-gray-900">Clear</a>
@@ -116,18 +116,18 @@
                                         @method('PATCH')
                                         @if ($quiz->is_published)
                                             <x-ui.button type="submit" variant="secondary"
-                                                class="!px-2.5 !py-1 !text-xs !bg-amber-50 hover:!bg-amber-100 !text-amber-800 !border-amber-200">
+                                                class="px-2.5! py-1! text-xs! bg-amber-50! hover:bg-amber-100! text-amber-800! border-amber-200!">
                                                 Revert to Draft
                                             </x-ui.button>
                                         @else
                                             <x-ui.button type="submit" variant="primary"
-                                                class="!px-2.5 !py-1 !text-xs !bg-slate-800 hover:!bg-slate-700 !border-slate-600 text-white">
+                                                class="px-2.5! py-1! text-xs! bg-slate-800! hover:bg-slate-700! border-slate-600! text-white">
                                                 Publish Draft
                                             </x-ui.button>
                                         @endif
                                     </form>
                                     <a href="{{ route('admin.quizzes.show', $quiz) }}">
-                                        <x-ui.button variant="secondary" class="!px-2.5 !py-1 !text-xs">View &
+                                        <x-ui.button variant="secondary" class="px-2.5! py-1! text-xs!">View &
                                             Edit</x-ui.button>
                                     </a>
                                     <form action="{{ route('admin.quizzes.destroy', $quiz) }}" method="POST"
@@ -135,7 +135,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <x-ui.button type="submit" variant="danger"
-                                            class="!px-2.5 !py-1 !text-xs">Delete</x-ui.button>
+                                            class="px-2.5! py-1! text-xs!">Delete</x-ui.button>
                                     </form>
                                 </div>
                             </div>
@@ -160,9 +160,9 @@
                             <input type="hidden" name="search_quizzes" value="{{ $searchQuizzes }}">
                         @endif
                         <x-ui.input name="search_attempts" type="text" placeholder="Search candidate..."
-                            value="{{ $searchAttempts }}" class="!py-1 !text-xs max-w-[150px]" />
+                            value="{{ $searchAttempts }}" class="py-1! text-xs! max-w-37.5" />
                         <x-ui.button type="submit" variant="secondary"
-                            class="!px-2 !py-1 !text-xs">Search</x-ui.button>
+                            class="px-2! py-1! text-xs!">Search</x-ui.button>
                         @if ($searchAttempts)
                             <a href="{{ route('admin.dashboard', ['search_quizzes' => $searchQuizzes]) }}"
                                 class="text-xs text-gray-500 hover:text-gray-900">Clear</a>
@@ -184,7 +184,7 @@
                                         <span
                                             class="text-xs font-semibold text-gray-950 block">{{ $attempt->user->name }}</span>
                                         <span
-                                            class="text-xs text-gray-500 block truncate max-w-[180px]">{{ $attempt->quiz->title }}</span>
+                                            class="text-xs text-gray-500 block truncate max-w-45">{{ $attempt->quiz->title }}</span>
                                     </div>
                                     <div class="text-right">
                                         @if ($attempt->completed_at)
@@ -220,7 +220,7 @@
                                         @endif
                                     </span>
                                     <a href="{{ route('admin.attempts.show', $attempt) }}">
-                                        <x-ui.button variant="secondary" class="!px-2 !py-0.5 !text-[11px]">
+                                        <x-ui.button variant="secondary" class="px-2! py-0.5! text-[11px]!">
                                             {{ $attempt->completed_at && $hasUngradedEssays ? 'Grade Essay' : 'View Detail' }}
                                         </x-ui.button>
                                     </a>
@@ -236,60 +236,6 @@
             </div>
         </div>
 
-        <!-- Activity Logs Section (Bottom, Full Width) -->
-        <div class="border-t border-gray-200 pt-6">
-            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">System Activity Logs</h2>
-            <div class="bg-white border border-gray-200 rounded-md overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-100 text-xs">
-                    <thead class="bg-gray-50 text-gray-400 font-semibold uppercase">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Time</th>
-                            <th class="px-4 py-2 text-left">User</th>
-                            <th class="px-4 py-2 text-left">Action</th>
-                            <th class="px-4 py-2 text-left">Description</th>
-                            <th class="px-4 py-2 text-left">IP Address</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        @forelse($activityLogs as $log)
-                            <tr class="hover:bg-gray-50/50">
-                                <td class="px-4 py-2.5 whitespace-nowrap text-gray-400">
-                                    {{ $log->created_at->format('M d, H:i:s') }}</td>
-                                <td class="px-4 py-2.5 whitespace-nowrap font-medium text-gray-950">
-                                    {{ $log->user ? $log->user->name : 'System' }}</td>
-                                <td class="px-4 py-2.5 whitespace-nowrap">
-                                    @php
-                                        $badgeVar = 'gray';
-                                        if (Str::contains($log->action, 'created')) {
-                                            $badgeVar = 'blue';
-                                        }
-                                        if (Str::contains($log->action, 'published')) {
-                                            $badgeVar = 'green';
-                                        }
-                                        if (Str::contains($log->action, 'submitted')) {
-                                            $badgeVar = 'green';
-                                        }
-                                        if (Str::contains($log->action, 'deleted')) {
-                                            $badgeVar = 'red';
-                                        }
-                                        if (Str::contains($log->action, 'graded')) {
-                                            $badgeVar = 'yellow';
-                                        }
-                                    @endphp
-                                    <x-ui.badge :variant="$badgeVar">{{ $log->action }}</x-ui.badge>
-                                </td>
-                                <td class="px-4 py-2.5">{{ $log->description }}</td>
-                                <td class="px-4 py-2.5 whitespace-nowrap text-gray-400">{{ $log->ip_address }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-4 py-6 text-center text-gray-400 italic">No activities
-                                    logged yet.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
+
     </div>
 </x-app-layout>

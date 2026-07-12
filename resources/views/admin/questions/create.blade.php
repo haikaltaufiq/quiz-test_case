@@ -59,7 +59,7 @@
                         </div>
                     </div>
 
-                    <div class="max-w-[200px]">
+                    <div class="max-w-50">
                         <x-ui.label for="correct_answer_mc" value="Correct Option" />
                         <select id="correct_answer_mc" name="correct_answer" class="block w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900" ::required="type === 'multiple_choice'" :disabled="type !== 'multiple_choice'">
                             <option value="a" {{ old('correct_answer') === 'a' ? 'selected' : '' }}>Option A</option>

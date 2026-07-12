@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\LogActivityController;
 use App\Http\Controllers\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Admin\AttemptController as AdminAttemptController;
@@ -30,7 +31,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 // Administrator Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminQuizController::class, 'index'])->name('admin.dashboard');
-    
+
     // Quiz CRUD
     Route::resource('quizzes', AdminQuizController::class)->except(['index'])->names([
         'create'  => 'admin.quizzes.create',
@@ -52,12 +53,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Attempt Review & Grading
     Route::get('/attempts/{attempt}', [AdminAttemptController::class, 'show'])->name('admin.attempts.show');
     Route::post('/attempts/{attempt}/grade', [AdminAttemptController::class, 'grade'])->name('admin.attempts.grade');
+
+    // Log Activity
+    Route::get('/log-activity', [LogActivityController::class, 'index'])->name('admin.log-activity.index');
 });
 
 // Participant Routes
 Route::middleware(['auth', 'participant'])->prefix('participant')->group(function () {
     Route::get('/dashboard', [ParticipantQuizController::class, 'dashboard'])->name('participant.dashboard');
-    
+
     // Quiz Engine
     Route::post('/quizzes/{quiz}/start', [ParticipantQuizController::class, 'start'])->name('participant.quizzes.start');
     Route::get('/attempts/{attempt}/take', [ParticipantQuizController::class, 'take'])->name('participant.attempts.take');
