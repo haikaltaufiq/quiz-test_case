@@ -143,7 +143,7 @@
                                 <div class="flex justify-between items-start">
                                     <div class="space-y-0.5">
                                         <span
-                                            class="text-xs font-semibold text-gray-950 block truncate max-w-45">{{ $attempt->quiz->title }}</span>
+                                            class="text-xs font-semibold text-gray-950 block truncate max-w-45">{{ $attempt->quiz?->title ?? 'Quiz deleted' }}</span>
                                         <span class="text-[10px] text-gray-400 block">
                                             {{ $attempt->completed_at ? 'Last finished: ' . $attempt->completed_at->format('M d, Y - H:i') : 'Started: ' . $attempt->created_at->format('M d, Y - H:i') }}
                                         </span>

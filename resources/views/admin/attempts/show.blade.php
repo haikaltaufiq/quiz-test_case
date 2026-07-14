@@ -20,7 +20,7 @@
                     Attempt</span>
                 <h1 class="text-base font-bold text-gray-900 mt-0.5">{{ $attempt->user->name }}</h1>
                 <p class="text-xs text-gray-500 mt-1">Quiz: <span
-                        class="font-medium text-gray-700">{{ $attempt->quiz->title }}</span></p>
+                        class="font-medium text-gray-700">{{ $attempt->quiz?->title ?? 'Quiz deleted' }}</span></p>
             </div>
             <div class="flex items-center space-x-6">
                 <div class="text-left md:text-right">

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot:title>Quiz Results - {{ $attempt->quiz->title }}</x-slot:title>
+    <x-slot:title>Quiz Results - {{ $attempt->quiz?->title ?? 'Quiz deleted' }}</x-slot:title>
 
     <div class="space-y-6">
         <!-- Header -->
@@ -18,7 +18,7 @@
             class="bg-white border border-gray-200 rounded-md p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <span class="text-xs text-gray-400 font-semibold block uppercase tracking-wider">Quiz Completed</span>
-                <h1 class="text-base font-bold text-gray-900 mt-0.5">{{ $attempt->quiz->title }}</h1>
+                <h1 class="text-base font-bold text-gray-900 mt-0.5">{{ $attempt->quiz?->title ?? 'Quiz deleted' }}</h1>
                 <p class="text-xs text-gray-500 mt-1">Attempt taken on
                     {{ $attempt->completed_at?->format('d M Y H:i') }}</p>
             </div>

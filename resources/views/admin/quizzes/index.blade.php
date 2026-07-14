@@ -184,7 +184,7 @@
                                         <span
                                             class="text-xs font-semibold text-gray-950 block">{{ $attempt->user->name }}</span>
                                         <span
-                                            class="text-xs text-gray-500 block truncate max-w-45">{{ $attempt->quiz->title }}</span>
+                                            class="text-xs text-gray-500 block truncate max-w-45">{{ $attempt->quiz?->title ?? 'Quiz deleted' }}</span>
                                     </div>
                                     <div class="text-right">
                                         @if ($attempt->completed_at)
